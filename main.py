@@ -5,7 +5,7 @@ from werkzeug.security import generate_password_hash,check_password_hash
 app = Flask(__name__)
 app.secret_key = "TEST"
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///Users.sqlite3'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ABC.sqlite3'
 db = SQLAlchemy(app)
 
 class Users(db.Model):
@@ -15,13 +15,18 @@ class Users(db.Model):
     _username = db.Column("UserName", db.String(100))
     _Password = db.Column("Password", db.String(100))
     _Email = db.Column("Email", db.String(100))
+    _complaints = db.relationship('Complaints', backref='ComplaintWriter',lazy='dynamic')
 
-    def __init__(self,firstname,lastname,username,password,email): #Constructor For A User Object
-        self._firstName = firstname
-        self._lastname = lastname
-        self._username = username
-        self._Email = email
-        self._Password = password
+
+class Complaints(db.Model):
+    _id = db.Column("ComplaintID", db.Integer, primary_key=True)
+    _UserID = db.Column("UserID", db.Integer,db.ForeignKey('users.ID'))
+    _title = db.Column("Title", db.String(30))
+    _Category = db.Column("Category", db.String(20))
+    _ComplaintMessage = db.Column("ComplaintMessage", db.String(300))
+    _complaintStatus = db.Column("ComplaintStatus", db.String(30))
+
+
 
 @app.route("/")
 def HomePage():
@@ -42,35 +47,37 @@ def SignInPage():
         if not loggedInUser or not check_password_hash(loggedInUser._Password, passwordLoginInput):
             return "Wrong Password"
         else:
-            return redirect(url_for("UserHomePage"))
+            return redirect(url_for("UserHomePage", user=loggedInUser._username))
 
-        #if Users.query.filter_by(_username=userNameLoginInput).first():
-            #return render_template("UserHomePage.html")
-        #else:
-            #return "Wrong Username"
+
 
 
 @app.route("/SignUp", methods=['GET','POST'])
 def SignUp():
     if request.method == "GET": #when the page is loaded
-        #user_test = users()
-        #user_test._firstName = "Marwan"
-        #db.session.add(user_test)
-        #db.session.commit()
         return render_template("SignUpHTMLPage.html")
     else: #method.request == "POST"
         userNameDuplicationFlag = Users.query.filter_by(_username=request.form['username']).first()
         if userNameDuplicationFlag == None:
-            UserObject = Users(firstname=request.form['fname'],lastname=request.form['lname'],username=request.form['username'],password=generate_password_hash(request.form['password'],'sha256'),email=request.form['UserEmail'])
+            UserObject = Users(_firstName=request.form['fname'],_lastname=request.form['lname'],_username=request.form['username'],_Password=generate_password_hash(request.form['password'],'sha256'),_Email=request.form['UserEmail'])
             db.session.add(UserObject)
             db.session.commit()
             return "thank you"
         else:
             return "Username Duplication"
 
-@app.route("/UserHomePage")
-def UserHomePage():
-    return render_template("UserHomePage.html")
+@app.route("/UserHomePage/<user>", methods=['GET','POST'])
+def UserHomePage(user): #THIS IS WHERE YOU SEND COMPLAINTS
+    if request.method == 'GET':
+        return render_template("UserHomePage.html")
+    else:
+        complainingUserObject = Users.query.filter_by(_username=user).first()
+        ComplaintObject = Complaints(_title=request.form['title'],_Category=request.form['category'],_ComplaintMessage=request.form['complaint'],ComplaintWriter=complainingUserObject, _complaintStatus='Pending Resolution')
+
+        db.session.add(ComplaintObject)
+        db.session.commit()
+        return "thank you"
+
 
 if __name__ == '__main__':
     db.create_all()
