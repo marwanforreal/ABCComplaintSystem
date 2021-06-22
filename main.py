@@ -16,7 +16,9 @@ class Users(db.Model):
     _username = db.Column("UserName", db.String(100))
     _Password = db.Column("Password", db.String(100))
     _Email = db.Column("Email", db.String(100))
+    _role = db.Column("Role", db.String(100))
     _complaints = db.relationship('Complaints', backref='ComplaintWriter', lazy='dynamic')
+
 
 
 class Complaints(db.Model):
@@ -42,12 +44,15 @@ def SignInPage():
         passwordLoginInput = request.form['password']
 
         loggedInUser = Users.query.filter_by(_username=userNameLoginInput).first()
+        session['LoggedInUser'] = loggedInUser._username
+
+        if loggedInUser._role == "admin":
+            return redirect(url_for('AdminPage'))
         if loggedInUser == None:
             return "Wrong User Name"
         if not loggedInUser or not check_password_hash(loggedInUser._Password, passwordLoginInput):
             return "Wrong Password"
         else:
-            session['LoggedInUser'] = loggedInUser._username
             return redirect(url_for("UserHomePage", user=loggedInUser._username))
 
 
@@ -105,10 +110,9 @@ def TicketStatus():
 def AdminPage():
     AllComplaintsTitles = []
     AllComplaintsStatuses = []
-    LoggedInUser = session['LoggedInUser']
     AdminUserObject = Users.query.filter_by(_username=session['LoggedInUser']).first()
 
-    if AdminUserObject._id == 1:
+    if AdminUserObject._role == "admin":
         AllComplaints = Complaints.query.all()  # returns a list of objects
     else:
         return "Not Authorized"
@@ -119,6 +123,21 @@ def AdminPage():
     return render_template("Admin.html", ListOfComplaints=AllComplaintsTitles,
                            status=AllComplaintsStatuses, len=len(AllComplaints))
 
+@app.route("/SignUpAdmin", methods=['GET', 'POST'])
+def SignUpAdmin():
+    if request.method == "GET":  # when the page is loaded
+        return render_template("AdminSignUp.html")
+    else:  # method.request == "POST"
+        userNameDuplicationFlag = Users.query.filter_by(_username=request.form['username']).first()
+        if userNameDuplicationFlag == None:
+            UserObject = Users(_username=request.form['username'],
+                               _Password=generate_password_hash(request.form['password'], 'sha256'),
+                               _role="admin")
+            db.session.add(UserObject)
+            db.session.commit()
+            return "thank you"
+        else:
+            return "Username Duplication"
 
 
 if __name__ == '__main__':
