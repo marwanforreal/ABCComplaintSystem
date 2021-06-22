@@ -47,6 +47,7 @@ def SignInPage():
         if not loggedInUser or not check_password_hash(loggedInUser._Password, passwordLoginInput):
             return "Wrong Password"
         else:
+            session['LoggedInUser'] = loggedInUser._username
             return redirect(url_for("UserHomePage", user=loggedInUser._username))
 
 
@@ -78,8 +79,23 @@ def UserHomePage(user): #THIS IS WHERE YOU SEND COMPLAINTS
         db.session.commit()
         return "thank you"
 
+@app.route("/TicketStatus")
+def TicketStatus():
+
+    if 'LoggedInUser' in session:
+        ListOfComplaintTitles=[]
+        ListOfComplaintStatus=[]
+        complainingUserObject = Users.query.filter_by(_username=session['LoggedInUser']).first()
+        CurrentUserID = complainingUserObject._id
+        ComplaintObjects = Complaints.query.filter_by(_UserID=CurrentUserID).all() #returns a list of objects
+
+        for x in range(len(ComplaintObjects)): #To transform the list of objects to a list of strings that can be used in html
+            ListOfComplaintTitles.append(ComplaintObjects[x]._title)
+            ListOfComplaintStatus.append(ComplaintObjects[x]._complaintStatus)
+
+
+        return render_template("TicketStatus.html", ListOfComplaints=ListOfComplaintTitles, status=ListOfComplaintStatus, len=len(ComplaintObjects))
 
 if __name__ == '__main__':
     db.create_all()
     app.run()
-
