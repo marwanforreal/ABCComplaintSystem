@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ABC Complaints: Sign Up!</title>
+</head>
+<body>
+<h1>Sign Up</h1>
+<form method="post">
+    <label for="username">Username:</label><br>
+    <input type="text" id="username" name="username"><br>
+    <label for="password">Password:</label><br>
+    <input type="password" id="password" name="password"><br>
+    <input type="submit" value="Submit"> <br><br>
+
+    <a href="{{ url_for('SignInPage') }}"> Have an Account? Sign In! </a>
+</form>
+</body>
+</html>
