@@ -8,7 +8,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 # email: marwankhasawneh@gmail.com        #
 # # # # # # # # # # # # # # # # # # # # # #
 
-#NOTE: In order to run this code the html files must be in a directory called "templates" in the same directory as this file. 
+#NOTE: In order to run this code the html files must be in a directory called "Templates" in the same directory as this file. 
 
 app = Flask(__name__)
 app.secret_key = "MARWANPWC"
