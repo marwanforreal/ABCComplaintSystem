@@ -17,7 +17,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ABC.sqlite3'
 db = SQLAlchemy(app)
 
 
-class Users(db.Model):
+class Users(db.Model): #Users Table in Database
     _id = db.Column("ID", db.Integer, primary_key=True)
     _firstName = db.Column("FirstName", db.String(100))
     _lastname = db.Column("LastName", db.String(100))
@@ -27,9 +27,9 @@ class Users(db.Model):
     _role = db.Column("Role", db.String(100))
     _complaints = db.relationship('Complaints', backref='ComplaintWriter', lazy='dynamic')
 
+#Note: One to many relationship between the table above and the table below
 
-
-class Complaints(db.Model):
+class Complaints(db.Model): #Complaints Table in Database
     _id = db.Column("ComplaintID", db.Integer, primary_key=True)
     _UserID = db.Column("UserID", db.Integer, db.ForeignKey('users.ID'))
     _title = db.Column("Title", db.String(30))
@@ -53,12 +53,12 @@ def SignInPage():
 
         loggedInUser = Users.query.filter_by(_username=userNameLoginInput).first()
 
-        if loggedInUser != None:
+        if loggedInUser != None: #If the username is correct
             session['LoggedInUser'] = loggedInUser._username
         if loggedInUser == None:
             return "Wrong User Name"
         if not loggedInUser or not check_password_hash(loggedInUser._Password, passwordLoginInput):
-            return "Wrong Password"
+            return "Wrong Password" 
         if loggedInUser._role == "admin":
             return redirect(url_for('AdminPage'))
         else:
